@@ -51,26 +51,45 @@ async def send_random_value(callback: types.CallbackQuery):
     await callback.message.answer(str(random.randint(1, 10)))
 
 # approved it the CHAT_ID
+@dp.callback_query(F.data == "callback_addlinks")
+async def add_links(callback: types.CallbackQuery):
+    await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + HTML_INFO, reply_markup=builder.as_markup())
+
+
+# approved it the CHAT_ID
 @dp.callback_query(F.data == "callback_approve")
 async def forward_to_channel(callback: types.CallbackQuery):
     global bot
     # callback.message.delete_reply_markup(callback.inline_message_id)
 
-    await callback.answer("userID: " + str(callback.message.from_user.id) + " caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
-    await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = 'Edited caption')
+    await callback.answer("caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
+    await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption)
     
 #    user_ID = callback.message.from_user.id
 #    await bot.send_message(chat_id=user_ID, text=TEXT_APPROVE_CONFIRMATION)
 
     emptyBuilder = InlineKeyboardBuilder()
     await callback.message.send_copy(chat_id=CHANNEL_NAME, reply_markup=emptyBuilder.as_markup())
-    await bot.send_message(chat_id=CHAT_ID, text=TEXT_APPROVE_CONFIRMATION)
     await bot.send_message(chat_id=CHANNEL_NAME, text=HTML_INFO, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    await send_admin_approve(callback)
 
 # rejected in the CHAT_ID
 @dp.callback_query(F.data == "callback_reject")
 async def reject_suggestion(callback: types.CallbackQuery):
-    await callback.message.answer(TEXT_REJECT_CONFIRMATION)
+    await callback.answer("caption: " + callback.message.caption + " chat_name: " + callback.message.chat.title + " from: " + callback.message.from_user.first_name + " msg ID: " + str(callback.message.message_id))
+    await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption)
+    await send_admin_reject(callback)
+
+
+
+async def send_admin_approve(callback: types.CallbackQuery):    
+    await callback.message.reply(TEXT_ADMIN_APPROVE_CONFIRMATION)
+
+async def send_admin_reject(callback: types.CallbackQuery):    
+    await callback.message.reply(TEXT_ADMIN_REJECT_CONFIRMATION)
+
+
+builder = InlineKeyboardBuilder()
 
 @dp.message()
 async def echo_handler(message: types.Message) -> None:
@@ -85,6 +104,7 @@ async def echo_handler(message: types.Message) -> None:
         builder = InlineKeyboardBuilder()
         builder.button(text=TEXT_APPROVE, callback_data="callback_approve")
         builder.button(text=TEXT_REJECT, callback_data="callback_reject")
+        builder.button(text=TEXT_LINKS, callback_data="callback_addlinks")
         await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
 
         # markup = types.InlineKeyboardMarkup()
