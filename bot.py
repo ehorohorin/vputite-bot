@@ -20,6 +20,7 @@ CHANNEL_NAME = getenv("CHANNEL_NAME")
 # All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
 bot = None
+builder = InlineKeyboardBuilder()
 
 
 @dp.message(CommandStart())
@@ -53,6 +54,7 @@ async def send_random_value(callback: types.CallbackQuery):
 # approved it the CHAT_ID
 @dp.callback_query(F.data == "callback_addlinks")
 async def add_links(callback: types.CallbackQuery):
+    global builder
     await bot.edit_message_caption(chat_id=callback.message.chat.id, message_id=callback.message.message_id, caption = callback.message.caption + HTML_INFO, reply_markup=builder.as_markup())
 
 
@@ -88,9 +90,6 @@ async def send_admin_approve(callback: types.CallbackQuery):
 async def send_admin_reject(callback: types.CallbackQuery):    
     await callback.message.reply(TEXT_ADMIN_REJECT_CONFIRMATION)
 
-
-builder = InlineKeyboardBuilder()
-
 @dp.message()
 async def echo_handler(message: types.Message) -> None:
     """
@@ -100,11 +99,9 @@ async def echo_handler(message: types.Message) -> None:
     """
     try:
         # Send a copy of the received message
+        # builder = InlineKeyboardBuilder()
+        global builder
 
-        builder = InlineKeyboardBuilder()
-        builder.button(text=TEXT_APPROVE, callback_data="callback_approve")
-        builder.button(text=TEXT_REJECT, callback_data="callback_reject")
-        builder.button(text=TEXT_LINKS, callback_data="callback_addlinks")
         await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
 
         # markup = types.InlineKeyboardMarkup()
@@ -135,6 +132,11 @@ async def main() -> None:
         admins_list += ("@" + x.user.username + " ")
 
     await bot.send_message(chat_id=CHAT_ID, text="I've started! :)\nAdministrators of the chat: " + admins_list)
+
+    global builder
+    builder.button(text=TEXT_APPROVE, callback_data="callback_approve")
+    builder.button(text=TEXT_REJECT, callback_data="callback_reject")
+    builder.button(text=TEXT_LINKS, callback_data="callback_addlinks")
 
     # And the run events dispatching
     await dp.start_polling(bot)
