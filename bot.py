@@ -68,7 +68,7 @@ async def echo_handler(message: types.Message) -> None:
     try:
         global builder
 
-        if (message.caption and message.photo):
+        if ((message.media_group_id) or (message.caption and message.photo)):
             # Send a copy of the received message
             builder = InlineKeyboardBuilder()
     
@@ -78,7 +78,10 @@ async def echo_handler(message: types.Message) -> None:
             builder.button(text=TEXT_REJECT, callback_data=VptCallbackData(action="callback_reject", message_id=message.message_id, chat_id=message.chat.id).pack())
 
             copy = await message.send_copy(chat_id=CHAT_ID, reply_markup=builder.as_markup())
-            await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = copy.caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
+            new_caption = ""
+            if (copy.caption):
+                new_caption = copy.caption
+            await bot.edit_message_caption(chat_id=copy.chat.id, message_id=copy.message_id, caption = new_caption + "\n\n" + HTML_INFO, reply_markup=builder.as_markup())
         else: 
             await message.answer(TEXT_SUBMIT_RULES)
 
